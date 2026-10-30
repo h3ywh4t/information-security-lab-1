@@ -101,7 +101,9 @@ public final class App {
         }
         try {
             return ctx.bodyAsClass(type);
-        } catch (RuntimeException e) {
+        } catch (HttpResponseException e) {
+            throw e;
+        } catch (Exception e) {
             throw new BadRequestResponse("Invalid JSON");
         }
     }
