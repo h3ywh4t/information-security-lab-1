@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Base64;
 
 final class Security {
+    private static final SecureRandom RANDOM = new SecureRandom();
     private final Algorithm algorithm;
     private final JWTVerifier verifier;
     private final String dummyHash;
@@ -24,7 +25,7 @@ final class Security {
         verifier = JWT.require(algorithm).withIssuer("secure-notes").withAudience("notes-api")
                 .withClaimPresence("sub").withClaimPresence("exp").withClaimPresence("iat").build();
         byte[] random = new byte[32];
-        new SecureRandom().nextBytes(random);
+        RANDOM.nextBytes(random);
         dummyHash = hash(Base64.getEncoder().encodeToString(random));
     }
 

@@ -3,14 +3,15 @@ package ru.itmo;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.ConflictResponse;
+import io.javalin.http.ContentTooLargeResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpResponseException;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.http.UnsupportedMediaTypeResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import org.owasp.encoder.Encode;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,9 @@ public final class App {
                 ctx.header("X-Content-Type-Options", "nosniff");
                 ctx.header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
                 ctx.header("Cache-Control", "no-store");
+                if (ctx.req().getContentLengthLong() > 16_384) {
+                    throw new ContentTooLargeResponse("Request body exceeds 16384 bytes");
+                }
             });
             config.routes.before("/api/*", ctx -> {
                 ctx.attribute("userId", security.authenticate(ctx.header("Authorization")));
@@ -55,7 +59,7 @@ public final class App {
                 ctx.json(Map.of("accessToken", security.issue(user.id()), "tokenType", "Bearer", "expiresIn", 900));
             });
             config.routes.get("/api/data", ctx -> {
-                long userId = ctx.attribute("userId");
+                long userId = Objects.requireNonNull(ctx.<Long>attribute("userId"));
                 ctx.json(database.notes(userId).stream().map(App::safeNote).toList());
             });
             config.routes.post("/api/data", ctx -> {
@@ -63,7 +67,7 @@ public final class App {
                 if (note == null || note.text() == null || note.text().isBlank() || note.text().length() > 2000) {
                     throw new BadRequestResponse("Text must contain 1 to 2000 characters");
                 }
-                long userId = ctx.attribute("userId");
+                long userId = Objects.requireNonNull(ctx.<Long>attribute("userId"));
                 ctx.status(201).json(safeNote(database.addNote(userId, note.text())));
             });
             config.routes.exception(HttpResponseException.class, (e, ctx) -> {
@@ -96,7 +100,7 @@ public final class App {
 
     private static <T> T body(Context ctx, Class<T> type) {
         String contentType = ctx.contentType();
-        if (contentType == null || !contentType.split(";", 2)[0].trim().toLowerCase(Locale.ROOT).equals("application/json")) {
+        if (contentType == null || !contentType.split(";", 2)[0].trim().matches("(?i)application/json")) {
             throw new UnsupportedMediaTypeResponse("Use application/json");
         }
         try {
