@@ -18,7 +18,7 @@
       <groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId><version>2.22.4</version>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.17</version>
+      <groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.20</version>
     </dependency>
     <dependency>
       <groupId>org.xerial</groupId><artifactId>sqlite-jdbc</artifactId><version>3.54.1.0</version>
@@ -54,6 +54,30 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.6.3</version>
         <configuration><mainClass>ru.itmo.App</mainClass></configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId><artifactId>spotbugs-maven-plugin</artifactId><version>4.10.5.0</version>
+        <configuration>
+          <effort>Max</effort><threshold>Low</threshold>
+          <htmlOutput>true</htmlOutput>
+          <plugins>
+            <plugin>
+              <groupId>com.h3xstream.findsecbugs</groupId><artifactId>findsecbugs-plugin</artifactId><version>1.14.0</version>
+            </plugin>
+          </plugins>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId><artifactId>dependency-check-maven</artifactId><version>13.0.0</version>
+        <configuration>
+          <format>HTML</format>
+          <failBuildOnCVSS>0</failBuildOnCVSS>
+          <failOnError>true</failOnError>
+          <nvdDatafeedUrl>https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz</nvdDatafeedUrl>
+          <skipTestScope>false</skipTestScope>
+          <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+          <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+        </configuration>
       </plugin>
     </plugins>
   </build>
